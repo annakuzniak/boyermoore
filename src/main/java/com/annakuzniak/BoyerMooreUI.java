@@ -21,6 +21,7 @@ public class BoyerMooreUI extends JFrame {
 
     private JTextField patternField;
     private JButton searchButton;
+    private JButton analyzeButton;
     private String bookText;
     private JLabel resultLabel;
     private JLabel statisticsLabel;
@@ -50,10 +51,12 @@ public class BoyerMooreUI extends JFrame {
 
         patternField = new JTextField(25);
         searchButton = new JButton("Search");
+        analyzeButton = new JButton("Analyze Complexity");
 
         searchPanel.add(patternLabel);
         searchPanel.add(patternField);
         searchPanel.add(searchButton);
+        searchPanel.add(analyzeButton);
         mainPanel.add(searchPanel);
 
 //      results panel
@@ -201,6 +204,61 @@ public class BoyerMooreUI extends JFrame {
                         );
                     } finally {
                         searchButton.setEnabled(true);
+                    }
+                }
+            };
+
+            worker.execute();
+        });
+
+//      complexity analysis button listener
+        analyzeButton.addActionListener(event -> {
+
+            if (bookText == null) {
+                resultLabel.setText("Book is not loaded.");
+                return;
+            }
+
+            String pattern = patternField.getText();
+
+            if (pattern.isEmpty()) {
+                resultLabel.setText("Please enter a pattern.");
+                return;
+            }
+
+            analyzeButton.setEnabled(false);
+            matchesArea.setText("Analyzing complexity...");
+
+            SwingWorker<List<String>, Void> worker = new SwingWorker<>() {
+
+                @Override
+                protected List<String> doInBackground() {
+                    ComplexityAnalyzer analyzer = new ComplexityAnalyzer();
+                    return analyzer.analyze(bookText, pattern);
+                }
+
+                @Override
+                protected void done() {
+                    try {
+                        List<String> results = get();
+
+                        matchesArea.setText(String.join("\n", results));
+                        matchesArea.setCaretPosition(0);
+
+                        resultLabel.setText("Complexity analysis completed.");
+                        statisticsLabel.setText(
+                                "Experimental results for different text lengths"
+                        );
+
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(
+                                BoyerMooreUI.this,
+                                "Complexity analysis failed: " + ex.getMessage(),
+                                "Analysis Error",
+                                JOptionPane.ERROR_MESSAGE
+                        );
+                    } finally {
+                        analyzeButton.setEnabled(true);
                     }
                 }
             };
