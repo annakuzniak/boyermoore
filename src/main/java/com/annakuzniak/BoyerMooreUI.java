@@ -1,5 +1,6 @@
 package com.annakuzniak;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.util.List;
@@ -13,6 +14,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingWorker;
+import javax.swing.text.DefaultHighlighter;
+import javax.swing.text.Highlighter;
 
 public class BoyerMooreUI extends JFrame {
 
@@ -143,9 +146,12 @@ public class BoyerMooreUI extends JFrame {
                                         + " ms"
                         );
 
+
                         StringBuilder results = new StringBuilder();
+                        List<int[]> highlightRanges = new java.util.ArrayList<>();
 
                         for (int index : matches) {
+
                             int start = Math.max(0, index - 40);
                             int end = Math.min(
                                     bookText.length(),
@@ -158,13 +164,32 @@ public class BoyerMooreUI extends JFrame {
 
                             results.append("Position: ")
                                     .append(index)
-                                    .append("\n")
-                                    .append(fragment)
+                                    .append("\n");
+
+                            int fragmentStart = results.length();
+
+                            results.append(fragment)
                                     .append("\n\n");
+
+                            int highlightStart = fragmentStart + (index - start);
+                            int highlightEnd = highlightStart + pattern.length();
+
+                            highlightRanges.add(new int[]{
+                                    highlightStart,
+                                    highlightEnd
+                            });
                         }
 
                         matchesArea.setText(results.toString());
+
+                        matchesArea.getHighlighter().removeAllHighlights();
+
+                        for (int[] range : highlightRanges) {
+                            highlightMatch(range[0], range[1]);
+                        }
+
                         matchesArea.setCaretPosition(0);
+
 
                     } catch (Exception ex) {
                         resultLabel.setText("Search failed.");
@@ -200,5 +225,24 @@ public class BoyerMooreUI extends JFrame {
             );
         }
     }
+
+    private void highlightMatch(int start, int end) {
+
+        try {
+            Highlighter highlighter = matchesArea.getHighlighter();
+
+            highlighter.addHighlight(
+                    start,
+                    end,
+                    new DefaultHighlighter.DefaultHighlightPainter(
+                            Color.YELLOW
+                    )
+            );
+
+        } catch (Exception e) {
+            System.err.println("Could not highlight match: " + e.getMessage());
+        }
+    }
+
 
 }
