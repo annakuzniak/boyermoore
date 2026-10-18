@@ -96,92 +96,92 @@ public class BoyerMooreUI extends JFrame {
 
 //      search button listener
         searchButton.addActionListener(event -> {
-                    if (bookText == null) {
-                        resultLabel.setText("Book is not loaded");
-                        return;
-                    }
+            if (bookText == null) {
+                resultLabel.setText("Book is not loaded");
+                return;
+            }
 
-                    String pattern = patternField.getText();
-                    if (pattern.isEmpty()) {
-                        resultLabel.setText("Please enter a pattern");
-                        return;
-                    }
+            String pattern = patternField.getText();
+            if (pattern.isEmpty()) {
+                resultLabel.setText("Please enter a pattern");
+                return;
+            }
 
-                    searchButton.setEnabled(false);
-                    resultLabel.setText("Searching...");
-                    statisticsLabel.setText("Search statistics:");
-                    matchesArea.setText("");
+            searchButton.setEnabled(false);
+            resultLabel.setText("Searching...");
+            statisticsLabel.setText("Search statistics:");
+            matchesArea.setText("");
 
-                    SwingWorker<Void, Void> worker = new SwingWorker<>() {
+            SwingWorker<Void, Void> worker = new SwingWorker<>() {
 
-                        private List<Integer> matches;
-                        private SearchStatistics stats;
+                private List<Integer> matches;
+                private SearchStatistics stats;
 
-                        @Override
-                        protected Void doInBackground() {
-                            BoyerMoore boyerMoore = new BoyerMoore();
-                            matches = boyerMoore.search(bookText, pattern);
-                            stats = boyerMoore.getSearchStatistics();
-                            return null;
+                @Override
+                protected Void doInBackground() {
+                    BoyerMoore boyerMoore = new BoyerMoore();
+                    matches = boyerMoore.search(bookText, pattern);
+                    stats = boyerMoore.getSearchStatistics();
+                    return null;
+                }
+
+                @Override
+                protected void done() {
+                    try {
+                        get();
+
+                        resultLabel.setText("Matches found: " + matches.size());
+
+                        double timeMilliseconds =
+                                stats.getExecutionTimeNanos() / 1_000_000.0;
+
+                        statisticsLabel.setText(
+                                "Comparisons: " + stats.getCharacterComparisons()
+                                        + " | Shifts: " + stats.getPatternShifts()
+                                        + " | Time: "
+                                        + String.format("%.3f", timeMilliseconds)
+                                        + " ms"
+                        );
+
+                        StringBuilder results = new StringBuilder();
+
+                        for (int index : matches) {
+                            int start = Math.max(0, index - 40);
+                            int end = Math.min(
+                                    bookText.length(),
+                                    index + pattern.length() + 40
+                            );
+
+                            String fragment = bookText.substring(start, end)
+                                    .replace('\n', ' ')
+                                    .replace('\r', ' ');
+
+                            results.append("Position: ")
+                                    .append(index)
+                                    .append("\n")
+                                    .append(fragment)
+                                    .append("\n\n");
                         }
 
-                        @Override
-                        protected void done() {
-                            try {
-                                get();
+                        matchesArea.setText(results.toString());
+                        matchesArea.setCaretPosition(0);
 
-                                resultLabel.setText("Matches found: " + matches.size());
+                    } catch (Exception ex) {
+                        resultLabel.setText("Search failed.");
+                        JOptionPane.showMessageDialog(
+                                BoyerMooreUI.this,
+                                "Search error: " + ex.getMessage(),
+                                "Search Error",
+                                JOptionPane.ERROR_MESSAGE
+                        );
+                    } finally {
+                        searchButton.setEnabled(true);
+                    }
+                }
+            };
 
-                                double timeMilliseconds =
-                                        stats.getExecutionTimeNanos() / 1_000_000.0;
-
-                                statisticsLabel.setText(
-                                        "Comparisons: " + stats.getCharacterComparisons()
-                                                + " | Shifts: " + stats.getPatternShifts()
-                                                + " | Time: "
-                                                + String.format("%.3f", timeMilliseconds)
-                                                + " ms"
-                                );
-
-                                StringBuilder results = new StringBuilder();
-
-                                for (int index : matches) {
-                                    int start = Math.max(0, index - 40);
-                                    int end = Math.min(
-                                            bookText.length(),
-                                            index + pattern.length() + 40
-                                    );
-
-                                    String fragment = bookText.substring(start, end)
-                                            .replace('\n', ' ')
-                                            .replace('\r', ' ');
-
-                                    results.append("Position: ")
-                                            .append(index)
-                                            .append("\n")
-                                            .append(fragment)
-                                            .append("\n\n");
-                                }
-
-                                matchesArea.setText(results.toString());
-                                matchesArea.setCaretPosition(0);
-
-                            } catch (Exception ex) {
-                                resultLabel.setText("Search failed.");
-                                JOptionPane.showMessageDialog(
-                                        BoyerMooreUI.this,
-                                        "Search error: " + ex.getMessage(),
-                                        "Search Error",
-                                        JOptionPane.ERROR_MESSAGE
-                                );
-                            } finally {
-                                searchButton.setEnabled(true);
-                            }
-                        }
-                    };
-
-                    worker.execute();
-                });
+            worker.execute();
+        });
 
 //      book loading
         try {
