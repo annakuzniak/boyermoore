@@ -1,6 +1,8 @@
 package com.annakuzniak;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class BoyerMoore {
@@ -70,6 +72,49 @@ public class BoyerMoore {
         }
 
         return goodSuffixShift;
+    }
+
+    public List<Integer> search(String text, String pattern) {
+
+        List<Integer> matches = new ArrayList<>();
+
+        if(pattern.isEmpty()){
+            return matches;
+        }
+
+        int textLength = text.length();
+        int patternLength = pattern.length();
+        int[] goodSuffixShift = buildGoodSuffixShiftTable(pattern);
+
+        Map<Character, Integer> lastOccurrence = buildLastOccurrenceTable(pattern);
+
+        int shift = 0;
+
+        while (shift <= textLength - patternLength) {
+
+            int j = patternLength - 1;
+
+            while (j >= 0 && pattern.charAt(j) == text.charAt(shift + j)) {
+                j--;
+            }
+
+            if (j < 0) {
+                matches.add(shift);
+                shift += goodSuffixShift[0];
+            }
+            else {
+                char mismatchedCharacter = text.charAt(shift + j);
+
+                int badCharacterShift = calculateBadCharacterShift(lastOccurrence, mismatchedCharacter, j);
+
+                int goodSuffixShiftValue = goodSuffixShift[j + 1];
+
+                shift += Math.max(badCharacterShift, goodSuffixShiftValue);
+            }
+
+        }
+
+        return matches;
     }
 
 }
