@@ -28,6 +28,50 @@ public class BoyerMoore {
         return Math.max(1, mismatchIndex - lastIndex);
     }
 
+    public int[] buildGoodSuffixShiftTable(String pattern) {
+
+        int patternLength = pattern.length();
+
+        int[] goodSuffixShift = new int[patternLength + 1];
+        int[] borderPosition = new int[patternLength + 1];
+
+        int i = patternLength;
+        int j = patternLength + 1;
+
+        borderPosition[i] = j;
+
+        while (i > 0) {
+            while (j <= patternLength && pattern.charAt(i - 1) != pattern.charAt(j - 1)) {
+
+                if (goodSuffixShift[j] == 0) {
+                    goodSuffixShift[j] = j - i;
+                }
+
+                j = borderPosition[j];
+            }
+
+            i--;
+            j--;
+
+            borderPosition[i] = j;
+        }
+
+        j = borderPosition[0];
+
+        for (int k = 0; k <= patternLength; k++) {
+
+            if (goodSuffixShift[k] == 0) {
+                goodSuffixShift[k] = j;
+            }
+
+            if (k == j) {
+                j = borderPosition[j];
+            }
+        }
+
+        return goodSuffixShift;
+    }
+
 }
 
 
