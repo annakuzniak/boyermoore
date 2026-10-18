@@ -197,4 +197,61 @@ class BoyerMooreTest {
         assertFalse(actual.isEmpty());
     }
 
+    @Test
+    void shouldCountCharacterComparisons() {
+
+        BoyerMoore boyerMoore = new BoyerMoore();
+
+        boyerMoore.search("ABCXABAB", "ABAB");
+
+        long comparisons = boyerMoore
+                .getSearchStatistics()
+                .getCharacterComparisons();
+
+        assertEquals(5, comparisons);
+    }
+
+    @Test
+    void shouldCountPatternShifts() {
+
+        BoyerMoore boyerMoore = new BoyerMoore();
+        boyerMoore.search("ABCXABAB", "ABAB");
+
+        long shifts = boyerMoore
+                .getSearchStatistics()
+                .getPatternShifts();
+
+        assertEquals(2, shifts);
+    }
+
+    @Test
+    void shouldMeasureExcecutionTime() {
+
+        BoyerMoore boyerMoore = new BoyerMoore();
+
+        boyerMoore.search("ABCXABAB", "ABAB");
+        long executionTime = boyerMoore
+                .getSearchStatistics()
+                .getExecutionTimeNanos();
+
+        assertTrue(executionTime >= 0);
+    }
+
+
+    @Test
+    void shouldResetStatisticsForEachSearch() {
+
+        BoyerMoore boyerMoore = new BoyerMoore();
+
+        boyerMoore.search("ABCXABAB", "ABAB");
+        assertEquals(5, boyerMoore.getSearchStatistics()
+                .getCharacterComparisons());
+
+        boyerMoore.search("ABAB", "ABAB");
+        assertEquals(4, boyerMoore.getSearchStatistics()
+                .getCharacterComparisons());
+        assertEquals(1, boyerMoore.getSearchStatistics()
+                .getPatternShifts());
+    }
+
 }

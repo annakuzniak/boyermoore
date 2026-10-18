@@ -7,6 +7,8 @@ import java.util.Map;
 
 public class BoyerMoore {
 
+    private SearchStatistics searchStatistics = new SearchStatistics();
+
     public Map<Character, Integer> buildLastOccurrenceTable(String pattern) {
 
         Map<Character, Integer> lastOccurrence = new HashMap<>();
@@ -76,9 +78,12 @@ public class BoyerMoore {
 
     public List<Integer> search(String text, String pattern) {
 
+        searchStatistics = new SearchStatistics();
+        long startTime = System.nanoTime();
         List<Integer> matches = new ArrayList<>();
 
-        if(pattern.isEmpty()){
+        if (pattern.isEmpty()) {
+            searchStatistics.setExecutionTimeNanos(System.nanoTime() - startTime);
             return matches;
         }
 
@@ -94,15 +99,22 @@ public class BoyerMoore {
 
             int j = patternLength - 1;
 
-            while (j >= 0 && pattern.charAt(j) == text.charAt(shift + j)) {
+            while (j >= 0) {
+
+                searchStatistics.incrementCharacterComparisons();
+
+                if (pattern.charAt(j) != text.charAt(shift + j)) {
+                    break;
+                }
+
                 j--;
             }
 
             if (j < 0) {
                 matches.add(shift);
                 shift += goodSuffixShift[0];
-            }
-            else {
+                searchStatistics.incrementPatternShifts();
+            } else {
                 char mismatchedCharacter = text.charAt(shift + j);
 
                 int badCharacterShift = calculateBadCharacterShift(lastOccurrence, mismatchedCharacter, j);
@@ -110,11 +122,19 @@ public class BoyerMoore {
                 int goodSuffixShiftValue = goodSuffixShift[j + 1];
 
                 shift += Math.max(badCharacterShift, goodSuffixShiftValue);
+                searchStatistics.incrementPatternShifts();
             }
 
         }
 
+        long endTime = System.nanoTime();
+        searchStatistics.setExecutionTimeNanos(endTime - startTime);
+
         return matches;
+    }
+
+    public SearchStatistics getSearchStatistics() {
+        return searchStatistics;
     }
 
 }
